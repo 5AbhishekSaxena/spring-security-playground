@@ -10,8 +10,11 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import tech.developingdeveloper.springloginplayground.appuser.AppUserService;
+import tech.developingdeveloper.springloginplayground.jwt.JwtConfig;
+import tech.developingdeveloper.springloginplayground.jwt.JwtTokenVerifier;
 import tech.developingdeveloper.springloginplayground.jwt.JwtUsernameAndPasswordAuthenticationFilter;
-import tech.developingdeveloper.springloginplayground.security.PasswordEncoder;
+
+import javax.crypto.SecretKey;
 
 /**
  * Created by Abhishek Saxena on 31-03-2021.
@@ -25,21 +28,33 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public WebSecurityConfig(AppUserService appUserService, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    private final SecretKey secretKey;
+
+    private final JwtConfig jwtConfig;
+
+    public WebSecurityConfig(AppUserService appUserService,
+                             BCryptPasswordEncoder bCryptPasswordEncoder,
+                             SecretKey secretKey,
+                             JwtConfig jwtConfig) {
         this.appUserService = appUserService;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.secretKey = secretKey;
+        this.jwtConfig = jwtConfig;
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
+                .csrf()
+                .disable()
                 .sessionManagement()
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager()))
+                .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager(), jwtConfig, secretKey))
+                .addFilterAfter(new JwtTokenVerifier(secretKey, jwtConfig), JwtUsernameAndPasswordAuthenticationFilter.class)
                 .authorizeRequests()
-                .antMatchers("/api/registration/**").permitAll()
+                .antMatchers("/api/registration/**")
+                .permitAll()
                 .anyRequest()
                 .authenticated();
     }
