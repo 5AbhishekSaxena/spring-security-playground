@@ -48,11 +48,11 @@ public class RegistrationService {
 
         String token = appUserService.signUpUser(appUser);
 
-        String link = "http://localhost:8080/api/registration/confirm?token=" + token;
+        //String link = "http://localhost:8080/api/registration/confirm?token=" + token;
 
-        emailSender.send(
+        /*emailSender.send(
                 appUser.getEmail(),
-                buildEmail(appUser.getFirstName(), link));
+                buildEmail(appUser.getFirstName(), link));*/
 
         return token;
     }
